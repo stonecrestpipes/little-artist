@@ -1,5 +1,5 @@
 /* Bump CACHE on every release so installed copies pick up the new files. */
-const CACHE = 'little-artist-v1';
+const CACHE = 'little-artist-v2';
 const PRECACHE = [
   './',
   './index.html',

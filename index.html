@@ -25,7 +25,7 @@
   :root { --u: min(12vh, 10vw); --g: calc(var(--u) * .12); }
   #app {
     position: fixed; inset: 0; display: grid;
-    grid-template-columns: calc(var(--u) * 1.35) 1fr calc(var(--u) * 1.35);
+    grid-template-columns: calc(var(--u) * 2.3) 1fr calc(var(--u) * 1.35);
     grid-template-rows: calc(var(--u) * .85) 1fr;
     gap: var(--g);
     padding: max(var(--g), env(safe-area-inset-top)) max(var(--g), env(safe-area-inset-right)) max(var(--g), env(safe-area-inset-bottom)) max(var(--g), env(safe-area-inset-left));
@@ -42,8 +42,10 @@
   .size { width: calc(var(--u) * 1.15); height: calc(var(--u) * .62); }
   .btn.sel { border-color: #222; background: #FFE9A8; box-shadow: 0 0 0 4px #222; }
   .size i { display: block; border-radius: 50%; background: #333; }
-  .color { width: calc(var(--u) * 1.1); height: calc(var(--u) * 1.1); border-radius: 50%; border: 4px solid rgba(0,0,0,.15); flex: none; }
+  .color { width: calc(var(--u) * .92); height: calc(var(--u) * .92); border-radius: 50%; border: 4px solid rgba(0,0,0,.15); flex: none; }
   .color.sel { border-color: #222; box-shadow: 0 0 0 4px #fff, 0 0 0 8px #222; transform: scale(1.04); }
+  #colors { display: grid; grid-template-columns: 1fr 1fr; justify-items: center; align-content: space-evenly; gap: calc(var(--u) * .12); }
+  #colors .color:last-child { grid-column: 1 / 3; }
   #cv { grid-column: 2; grid-row: 2; width: 100%; height: 100%; background: #fff; border-radius: calc(var(--u) * .3); display: block; touch-action: none; min-height: 0; min-width: 0; }
   #parent { position: relative; width: calc(var(--u) * .6); height: calc(var(--u) * .6); border-radius: 50%; background: transparent; color: #C9BF9F; display: flex; align-items: center; justify-content: center; }
   #parent svg { width: 60%; height: 60%; }
@@ -110,7 +112,9 @@
 (function () {
   var $ = function (s) { return document.querySelector(s); };
   var BG = '#fff';
-  var COLORS = ['#E8312F', '#FFD43B', '#1C7ED6'];
+  var COLORS = ['#E8312F', '#FF922B', '#FFD43B', '#2F9E44', '#1C7ED6', '#7048E8', '#1E1E1E'];
+  var NAMES = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Black'];
+  var NOTES = [262, 294, 330, 392, 440, 523, 196];
   var BASE_W = { pencil: 6, marker: 22, sparkle: 14 };
   var SIZE_MULT = [0.55, 1, 1.9];
   var MAX_LIVE = 40, BAKE_N = 10;
@@ -232,9 +236,9 @@
   var colorsEl = $('#colors');
   COLORS.forEach(function (c, i) {
     var b = document.createElement('button');
-    b.className = 'color' + (i === 0 ? ' sel' : ''); b.style.background = c; b.setAttribute('aria-label', ['Red', 'Yellow', 'Blue'][i]);
+    b.className = 'color' + (i === 0 ? ' sel' : ''); b.style.background = c; b.setAttribute('aria-label', NAMES[i]);
     b.addEventListener('click', function () {
-      color = c; erasing = false; syncUI(); buzz(); tone([262, 330, 392][i], 0.18, 'sine', 0.2, 1.5);
+      color = c; erasing = false; syncUI(); buzz(); tone(NOTES[i], 0.18, 'sine', 0.2, 1.5);
     });
     colorsEl.appendChild(b);
   });
