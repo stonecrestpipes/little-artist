@@ -36,8 +36,11 @@
   button { font: inherit; border: none; cursor: pointer; touch-action: manipulation; transition: transform .08s; }
   button:active { transform: scale(.92); }
   .btn { background: #2a2a2a; color: #eee; border-radius: calc(var(--u) * .25); display: flex; align-items: center; justify-content: center; border: 3px solid #444; }
-  .btn svg { width: 68%; height: 68%; }
-  .big { width: calc(var(--u) * 1.15); height: calc(var(--u) * .85); }
+  .btn svg { width: calc(var(--u) * .45); height: calc(var(--u) * .45); flex: none; }
+  .btn span { font-size: calc(var(--u) * .16); color: #ccc; }
+  .tool { flex-direction: column; gap: 2px; }
+  .big { gap: calc(var(--u) * .1); }
+  .big { width: calc(var(--u) * 1.6); height: calc(var(--u) * .85); }
   .tool { width: calc(var(--u) * 1.15); height: calc(var(--u) * .95); }
   .size { width: calc(var(--u) * 1.15); height: calc(var(--u) * .62); }
   .btn.sel { border-color: #fff; background: #3d3d3d; box-shadow: 0 0 0 4px #fff; }
@@ -64,20 +67,20 @@
 <body>
 <div id="app">
   <div id="top">
-    <button class="btn big" id="eraser" aria-label="Eraser"><svg viewBox="0 0 64 64"><g transform="rotate(-35 32 32)"><rect x="8" y="22" width="48" height="22" rx="5" fill="#F783AC"/><rect x="8" y="22" width="18" height="22" rx="5" fill="#ADB5BD"/></g></svg></button>
-    <button class="btn big" id="undo" aria-label="Undo"><svg viewBox="0 0 64 64" fill="none" stroke="#1C7ED6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 28h22a11 11 0 0 1 0 22H24"/><path d="M29 15L16 28l13 13"/></svg></button>
+    <button class="btn big" id="eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3"/><path d="M18 13.3l-6.3 -6.3"/></svg><span>Eraser</span></button>
+    <button class="btn big" id="undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg><span>Undo</span></button>
     <div class="sp"></div>
     <button id="parent" aria-label="Grown-ups: hold to open"><svg viewBox="0 0 64 64" fill="currentColor"><rect x="14" y="28" width="36" height="28" rx="6"/><path d="M22 28v-8a10 10 0 0 1 20 0v8" fill="none" stroke="currentColor" stroke-width="6"/></svg></button>
     <div class="sp"></div>
-    <button class="btn big" id="clear" aria-label="Clear everything"><svg viewBox="0 0 64 64" fill="none" stroke="#E8312F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h40M25 18v-6h14v6M18 18l3 36h22l3-36M28 28v18M36 28v18"/></svg></button>
+    <button class="btn big" id="clear" aria-label="Clear everything"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#ff6b6b"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg><span>Clear</span></button>
   </div>
 
   <div class="panel" id="colors"></div>
   <canvas id="cv"></canvas>
   <div class="panel" id="tools">
-    <button class="btn tool sel" data-tool="pencil" aria-label="Pencil"><svg viewBox="0 0 64 64"><g transform="rotate(45 32 32)"><rect x="24" y="6" width="16" height="36" rx="2" fill="#FFB84D"/><rect x="24" y="6" width="16" height="8" rx="2" fill="#F783AC"/><path d="M24 42h16l-8 16z" fill="#F3D9B1"/><path d="M29 52h6l-3 6z" fill="#ADB5BD"/></g></svg></button>
-    <button class="btn tool" data-tool="marker" aria-label="Marker"><svg viewBox="0 0 64 64"><g transform="rotate(45 32 32)"><rect x="21" y="4" width="22" height="38" rx="4" fill="#9775FA"/><rect x="21" y="4" width="22" height="9" rx="3" fill="#6741D9"/><path d="M25 42h14l-3 15h-8z" fill="#ADB5BD"/></g></svg></button>
-    <button class="btn tool" data-tool="sparkle" aria-label="Sparkle brush"><svg viewBox="0 0 64 64"><path d="M30 8l6 20 20 6-20 6-6 20-6-20-20-6 20-6z" fill="#FFD43B" stroke="#F08C00" stroke-width="3" stroke-linejoin="round"/><path d="M52 6l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="#FF8AD8"/></svg></button>
+    <button class="btn tool sel" data-tool="pencil" aria-label="Pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg><span>Pencil</span></button>
+    <button class="btn tool" data-tool="marker" aria-label="Marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M12.5 5.5l4 4"/><path d="M4.5 13.5l4 4"/><path d="M21 15v4h-8l4 -4z"/></svg><span>Marker</span></button>
+    <button class="btn tool" data-tool="sparkle" aria-label="Sparkle brush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z"/></svg><span>Sparkle</span></button>
     <div id="sizes" style="display:contents">
       <button class="btn size" data-size="0" aria-label="Thin"><i style="width:12px;height:12px"></i></button>
       <button class="btn size sel" data-size="1" aria-label="Medium"><i style="width:22px;height:22px"></i></button>
@@ -88,7 +91,7 @@
 
 <div class="overlay" id="confirm">
   <div class="card">
-    <svg width="90" height="90" viewBox="0 0 64 64" fill="none" stroke="#E8312F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h40M25 18v-6h14v6M18 18l3 36h22l3-36"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="90" height="90" style="color:#E8312F"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg>
     <div class="row">
       <button class="yn" id="no" style="background:#FFC9C9" aria-label="No, keep drawing"><svg viewBox="0 0 64 64" fill="none" stroke="#C92A2A" stroke-width="9" stroke-linecap="round"><path d="M16 16l32 32M48 16L16 48"/></svg></button>
       <button class="yn" id="yes" style="background:#B2F2BB" aria-label="Yes, clear"><svg viewBox="0 0 64 64" fill="none" stroke="#2B8A3E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 34l14 14 26-30"/></svg></button>
