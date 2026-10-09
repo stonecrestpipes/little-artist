@@ -62,6 +62,9 @@
   #parentCard button { font-size: 20px; padding: 16px 20px; border-radius: 14px; background: #F1EFE8; color: #222; text-align: left; }
   #parentCard .hint { font-size: 14px; color: #666; }
   #install { display: none; }
+  #installTop { display: none; width: auto; padding: 0 calc(var(--u) * .3); background: #FFD43B; color: #111; border-color: #FFD43B; font-weight: 700; }
+  #installTop span { color: #111; font-size: calc(var(--u) * .24); }
+  #installTop.show { display: flex; }
 </style>
 </head>
 <body>
@@ -70,6 +73,7 @@
     <button class="btn big" id="eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3"/><path d="M18 13.3l-6.3 -6.3"/></svg><span>Eraser</span></button>
     <button class="btn big" id="undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg><span>Undo</span></button>
     <div class="sp"></div>
+    <button class="btn big" id="installTop" aria-label="Install app"><span>Install app</span></button>
     <button id="parent" aria-label="Grown-ups: hold to open"><svg viewBox="0 0 64 64" fill="currentColor"><rect x="14" y="28" width="36" height="28" rx="6"/><path d="M22 28v-8a10 10 0 0 1 20 0v8" fill="none" stroke="currentColor" stroke-width="6"/></svg></button>
     <div class="sp"></div>
     <button class="btn big" id="clear" aria-label="Clear everything"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#ff6b6b"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg><span>Clear</span></button>
@@ -285,9 +289,29 @@
     if (document.fullscreenElement) document.exitFullscreen(); else if (d.requestFullscreen) d.requestFullscreen().catch(function () {});
     pov.classList.remove('show');
   });
-  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredInstall = e; $('#install').style.display = 'block'; });
-  $('#install').addEventListener('click', function () { if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; $('#install').style.display = 'none'; } });
-  window.addEventListener('appinstalled', function () { $('#install').style.display = 'none'; });
+  /* Chrome's menu refuses to install when any app on this origin is installed; the page's own prompt still works. Fire on finger lift. */
+  var standalone = window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  var topInstall = $('#installTop'), armed = null;
+  function showInstall() {
+    var on = !!deferredInstall && !standalone;
+    topInstall.classList.toggle('show', on);
+    $('#install').style.display = on ? 'block' : 'none';
+  }
+  function doInstall() {
+    var d = deferredInstall; if (!d) return;
+    deferredInstall = null; showInstall();
+    d.prompt().catch(function () { deferredInstall = d; showInstall(); });
+  }
+  window.addEventListener('beforeinstallprompt', function (e) { deferredInstall = e; showInstall(); });
+  window.addEventListener('appinstalled', function () { deferredInstall = null; showInstall(); });
+  [topInstall, $('#install')].forEach(function (b) {
+    b.addEventListener('pointerdown', function () { armed = b; });
+    b.addEventListener('pointerup', function (e) {
+      var r = b.getBoundingClientRect(), inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      if (armed === b && inside) doInstall(); armed = null;
+    });
+    b.addEventListener('pointercancel', function () { armed = null; });
+  });
 
   /* ---------- keep a toddler inside the app ---------- */
   document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
