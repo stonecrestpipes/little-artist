@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#FFF4D6" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Little Artist" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<title>Little Artist</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; background: #FFF4D6; overflow: hidden;
+    touch-action: none; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+    font-family: system-ui, sans-serif;
+  }
+  :root { --u: min(12vh, 10vw); --g: calc(var(--u) * .12); }
+  #app {
+    position: fixed; inset: 0; display: grid;
+    grid-template-columns: calc(var(--u) * 1.35) 1fr calc(var(--u) * 1.35);
+    grid-template-rows: calc(var(--u) * .85) 1fr;
+    gap: var(--g);
+    padding: max(var(--g), env(safe-area-inset-top)) max(var(--g), env(safe-area-inset-right)) max(var(--g), env(safe-area-inset-bottom)) max(var(--g), env(safe-area-inset-left));
+  }
+  #top { grid-column: 1 / 4; display: flex; align-items: center; gap: var(--g); }
+  #top .sp { flex: 1; }
+  .panel { background: #fff; border-radius: calc(var(--u) * .3); display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; padding: calc(var(--u) * .1); gap: calc(var(--u) * .1); min-height: 0; }
+  button { font: inherit; border: none; cursor: pointer; touch-action: manipulation; transition: transform .08s; }
+  button:active { transform: scale(.92); }
+  .btn { background: #fff; color: #333; border-radius: calc(var(--u) * .25); display: flex; align-items: center; justify-content: center; border: 3px solid #E9E2CF; }
+  .btn svg { width: 68%; height: 68%; }
+  .big { width: calc(var(--u) * 1.15); height: calc(var(--u) * .85); }
+  .tool { width: calc(var(--u) * 1.15); height: calc(var(--u) * .95); }
+  .size { width: calc(var(--u) * 1.15); height: calc(var(--u) * .62); }
+  .btn.sel { border-color: #222; background: #FFE9A8; box-shadow: 0 0 0 4px #222; }
+  .size i { display: block; border-radius: 50%; background: #333; }
+  .color { width: calc(var(--u) * 1.1); height: calc(var(--u) * 1.1); border-radius: 50%; border: 4px solid rgba(0,0,0,.15); flex: none; }
+  .color.sel { border-color: #222; box-shadow: 0 0 0 4px #fff, 0 0 0 8px #222; transform: scale(1.04); }
+  #cv { grid-column: 2; grid-row: 2; width: 100%; height: 100%; background: #fff; border-radius: calc(var(--u) * .3); display: block; touch-action: none; min-height: 0; min-width: 0; }
+  #parent { position: relative; width: calc(var(--u) * .6); height: calc(var(--u) * .6); border-radius: 50%; background: transparent; color: #C9BF9F; display: flex; align-items: center; justify-content: center; }
+  #parent svg { width: 60%; height: 60%; }
+  #parent::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 5px solid #FF922B; transform: scale(0); opacity: 0; transition: none; }
+  #parent.hold::after { opacity: 1; transform: scale(1); transition: transform 1.2s linear; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 5; }
+  .overlay.show { display: flex; }
+  .card { background: #fff; border-radius: calc(var(--u) * .4); padding: calc(var(--u) * .4); display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .3); }
+  .card .row { display: flex; gap: calc(var(--u) * .4); }
+  .yn { width: calc(var(--u) * 1.5); height: calc(var(--u) * 1.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .yn svg { width: 60%; height: 60%; }
+  #parentCard { align-items: stretch; min-width: 320px; }
+  #parentCard button { font-size: 20px; padding: 16px 20px; border-radius: 14px; background: #F1EFE8; color: #222; text-align: left; }
+  #parentCard .hint { font-size: 14px; color: #666; }
+  #install { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <button class="btn big" id="eraser" aria-label="Eraser"><svg viewBox="0 0 64 64"><g transform="rotate(-35 32 32)"><rect x="8" y="22" width="48" height="22" rx="5" fill="#F783AC"/><rect x="8" y="22" width="18" height="22" rx="5" fill="#ADB5BD"/></g></svg></button>
+    <button class="btn big" id="undo" aria-label="Undo"><svg viewBox="0 0 64 64" fill="none" stroke="#1C7ED6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 28h22a11 11 0 0 1 0 22H24"/><path d="M29 15L16 28l13 13"/></svg></button>
+    <div class="sp"></div>
+    <button id="parent" aria-label="Grown-ups: hold to open"><svg viewBox="0 0 64 64" fill="currentColor"><rect x="14" y="28" width="36" height="28" rx="6"/><path d="M22 28v-8a10 10 0 0 1 20 0v8" fill="none" stroke="currentColor" stroke-width="6"/></svg></button>
+    <div class="sp"></div>
+    <button class="btn big" id="clear" aria-label="Clear everything"><svg viewBox="0 0 64 64" fill="none" stroke="#E8312F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h40M25 18v-6h14v6M18 18l3 36h22l3-36M28 28v18M36 28v18"/></svg></button>
+  </div>
+
+  <div class="panel" id="colors"></div>
+  <canvas id="cv"></canvas>
+  <div class="panel" id="tools">
+    <button class="btn tool sel" data-tool="pencil" aria-label="Pencil"><svg viewBox="0 0 64 64"><g transform="rotate(45 32 32)"><rect x="24" y="6" width="16" height="36" rx="2" fill="#FFB84D"/><rect x="24" y="6" width="16" height="8" rx="2" fill="#F783AC"/><path d="M24 42h16l-8 16z" fill="#F3D9B1"/><path d="M29 52h6l-3 6z" fill="#333"/></g></svg></button>
+    <button class="btn tool" data-tool="marker" aria-label="Marker"><svg viewBox="0 0 64 64"><g transform="rotate(45 32 32)"><rect x="21" y="4" width="22" height="38" rx="4" fill="#9775FA"/><rect x="21" y="4" width="22" height="9" rx="3" fill="#6741D9"/><path d="M25 42h14l-3 15h-8z" fill="#343A40"/></g></svg></button>
+    <button class="btn tool" data-tool="sparkle" aria-label="Sparkle brush"><svg viewBox="0 0 64 64"><path d="M30 8l6 20 20 6-20 6-6 20-6-20-20-6 20-6z" fill="#FFD43B" stroke="#F08C00" stroke-width="3" stroke-linejoin="round"/><path d="M52 6l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="#FF8AD8"/></svg></button>
+    <div id="sizes" style="display:contents">
+      <button class="btn size" data-size="0" aria-label="Thin"><i style="width:12px;height:12px"></i></button>
+      <button class="btn size sel" data-size="1" aria-label="Medium"><i style="width:22px;height:22px"></i></button>
+      <button class="btn size" data-size="2" aria-label="Thick"><i style="width:34px;height:34px"></i></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="confirm">
+  <div class="card">
+    <svg width="90" height="90" viewBox="0 0 64 64" fill="none" stroke="#E8312F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h40M25 18v-6h14v6M18 18l3 36h22l3-36"/></svg>
+    <div class="row">
+      <button class="yn" id="no" style="background:#FFC9C9" aria-label="No, keep drawing"><svg viewBox="0 0 64 64" fill="none" stroke="#C92A2A" stroke-width="9" stroke-linecap="round"><path d="M16 16l32 32M48 16L16 48"/></svg></button>
+      <button class="yn" id="yes" style="background:#B2F2BB" aria-label="Yes, clear"><svg viewBox="0 0 64 64" fill="none" stroke="#2B8A3E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 34l14 14 26-30"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="parentOverlay">
+  <div class="card" id="parentCard">
+    <button id="sndBtn">Sound: on</button>
+    <button id="fsBtn">Go full screen</button>
+    <button id="install">Install app</button>
+    <div class="hint">Tip: for a fully locked screen, turn on Android's Screen pinning, then pin this app.</div>
+    <button id="closeParent" style="background:#222;color:#fff">Back to drawing</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var BG = '#fff';
+  var COLORS = ['#E8312F', '#FFD43B', '#1C7ED6'];
+  var BASE_W = { pencil: 6, marker: 22, sparkle: 14 };
+  var SIZE_MULT = [0.55, 1, 1.9];
+  var MAX_LIVE = 40, BAKE_N = 10;
+
+  var cv = $('#cv'), ctx = cv.getContext('2d');
+  var base = document.createElement('canvas'), bctx = base.getContext('2d');
+  var W = 0, H = 0, dpr = 1;
+  var strokes = [];
+  var active = {};
+  var color = COLORS[0], tool = 'pencil', sizeIdx = 1, erasing = false;
+  var muted = false;
+  try { muted = localStorage.getItem('muted') === '1'; } catch (e) {}
+
+  /* ---------- sound (synthesized, no files) ---------- */
+  var AC = null;
+  function ac() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (AC && AC.state === 'suspended') AC.resume();
+    return AC;
+  }
+  function tone(freq, dur, type, vol, slide) {
+    if (muted) return; var a = ac(); if (!a) return;
+    var o = a.createOscillator(), g = a.createGain(), t = a.currentTime;
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(freq * slide, t + dur);
+    g.gain.setValueAtTime(vol || 0.15, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function whoosh() {
+    if (muted) return; var a = ac(); if (!a) return;
+    var len = a.sampleRate * 0.5, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    var s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(), t = a.currentTime;
+    s.buffer = buf; f.type = 'bandpass'; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(2500, t); f.frequency.exponentialRampToValueAtTime(300, t + 0.5);
+    g.gain.value = 0.5; s.connect(f); f.connect(g); g.connect(a.destination); s.start(t);
+  }
+  function buzz() { try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {} }
+
+  /* ---------- canvas ---------- */
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  var GLINTS = ['#FFD43B', '#FF8AD8', '#74C0FC', '#8CE99A', '#FFA94D'];
+
+  function drawSeg(c, s, i) {
+    var b = s.pts[i], a = s.pts[Math.max(0, i - 1)];
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    c.strokeStyle = s.color; c.lineWidth = s.w;
+    c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+    if (s.tool === 'sparkle') {
+      var r = mulberry(s.seed + i);
+      for (var k = 0; k < 3; k++) {
+        if (r() < 0.3) continue;
+        c.fillStyle = GLINTS[Math.floor(r() * GLINTS.length)];
+        c.beginPath();
+        c.arc(b[0] + (r() - .5) * s.w * 3.2, b[1] + (r() - .5) * s.w * 3.2, 3 + r() * s.w * 0.4, 0, 6.3);
+        c.fill();
+      }
+    }
+  }
+  function drawStroke(c, s, from) {
+    if (s.tool === 'clear') { c.fillStyle = BG; c.fillRect(0, 0, W, H); return; }
+    for (var i = from || 0; i < s.pts.length; i++) drawSeg(c, s, i);
+  }
+  function render() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = BG; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(base, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (var i = 0; i < strokes.length; i++) drawStroke(ctx, strokes[i]);
+  }
+  function bake() {
+    if (strokes.length <= MAX_LIVE) return;
+    for (var id in active) return;
+    var old = strokes.splice(0, BAKE_N);
+    for (var i = 0; i < old.length; i++) drawStroke(bctx, old[i]);
+  }
+  function fit() {
+    var r = cv.getBoundingClientRect();
+    var nd = Math.min(window.devicePixelRatio || 1, 2);
+    var nw = Math.round(r.width * nd), nh = Math.round(r.height * nd);
+    if (!nw || !nh || (nw === cv.width && nh === cv.height)) return;
+    var prev = null, pw = W, ph = H;
+    if (cv.width) { prev = document.createElement('canvas'); prev.width = cv.width; prev.height = cv.height; prev.getContext('2d').drawImage(cv, 0, 0); }
+    cv.width = nw; cv.height = nh; base.width = nw; base.height = nh; dpr = nd; W = r.width; H = r.height;
+    bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bctx.fillStyle = BG; bctx.fillRect(0, 0, W, H);
+    if (prev) bctx.drawImage(prev, 0, 0, pw, ph);
+    strokes = [];
+    render();
+  }
+
+  function pt(e) { var r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  function isPalm(e) { return e.pointerType === 'touch' && e.width > 90 && e.height > 90; }
+  function strokeWidth() {
+    var m = SIZE_MULT[sizeIdx];
+    return erasing ? 26 * m + 10 : BASE_W[tool] * m;
+  }
+  cv.addEventListener('pointerdown', function (e) {
+    if (isPalm(e) || active[e.pointerId]) return;
+    wake();
+    var s = { tool: erasing ? 'eraser' : tool, color: erasing ? BG : color, w: strokeWidth(), seed: (Math.random() * 1e9) | 0, pts: [pt(e)] };
+    active[e.pointerId] = s; strokes.push(s);
+    try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+    drawSeg(ctx, s, 0);
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove', function (e) {
+    var s = active[e.pointerId]; if (!s) return;
+    var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    if (!evs.length) evs = [e];
+    for (var k = 0; k < evs.length; k++) { s.pts.push(pt(evs[k])); drawSeg(ctx, s, s.pts.length - 1); }
+    e.preventDefault();
+  });
+  function end(e) { if (active[e.pointerId]) { delete active[e.pointerId]; bake(); } }
+  cv.addEventListener('pointerup', end);
+  cv.addEventListener('pointercancel', end);
+
+  /* ---------- controls ---------- */
+  var colorsEl = $('#colors');
+  COLORS.forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.className = 'color' + (i === 0 ? ' sel' : ''); b.style.background = c; b.setAttribute('aria-label', ['Red', 'Yellow', 'Blue'][i]);
+    b.addEventListener('click', function () {
+      color = c; erasing = false; syncUI(); buzz(); tone([262, 330, 392][i], 0.18, 'sine', 0.2, 1.5);
+    });
+    colorsEl.appendChild(b);
+  });
+  function syncUI() {
+    var cs = colorsEl.children;
+    for (var i = 0; i < cs.length; i++) cs[i].classList.toggle('sel', !erasing && COLORS[i] === color);
+    document.querySelectorAll('[data-tool]').forEach(function (t) { t.classList.toggle('sel', !erasing && t.dataset.tool === tool); });
+    document.querySelectorAll('[data-size]').forEach(function (t) { t.classList.toggle('sel', +t.dataset.size === sizeIdx); });
+    $('#eraser').classList.toggle('sel', erasing);
+  }
+  document.querySelectorAll('[data-tool]').forEach(function (b) {
+    b.addEventListener('click', function () { tool = b.dataset.tool; erasing = false; syncUI(); buzz(); tone(520, 0.1, 'triangle', 0.15, 1.3); });
+  });
+  document.querySelectorAll('[data-size]').forEach(function (b) {
+    b.addEventListener('click', function () { sizeIdx = +b.dataset.size; syncUI(); buzz(); tone([440, 330, 220][sizeIdx], 0.1, 'triangle', 0.15); });
+  });
+  $('#eraser').addEventListener('click', function () { erasing = !erasing; syncUI(); buzz(); tone(300, 0.12, 'square', 0.06, 0.7); });
+  $('#undo').addEventListener('click', function () {
+    if (!strokes.length) { tone(150, 0.1, 'sine', 0.1); return; }
+    strokes.pop(); render(); buzz(); tone(400, 0.14, 'triangle', 0.15, 0.6);
+  });
+  var confirmEl = $('#confirm');
+  $('#clear').addEventListener('click', function () { confirmEl.classList.add('show'); });
+  $('#no').addEventListener('click', function () { confirmEl.classList.remove('show'); });
+  $('#yes').addEventListener('click', function () {
+    strokes.push({ tool: 'clear', pts: [] }); render(); bake(); confirmEl.classList.remove('show'); whoosh();
+  });
+
+  /* ---------- grown-ups corner (hold ~1.2s) ---------- */
+  var pbtn = $('#parent'), ptimer = null, pov = $('#parentOverlay'), deferredInstall = null;
+  function pdown(e) { e.preventDefault(); pbtn.classList.add('hold'); clearTimeout(ptimer); ptimer = setTimeout(function () { pbtn.classList.remove('hold'); pov.classList.add('show'); }, 1200); }
+  function pup() { clearTimeout(ptimer); pbtn.classList.remove('hold'); }
+  pbtn.addEventListener('pointerdown', pdown);
+  pbtn.addEventListener('pointerup', pup); pbtn.addEventListener('pointerleave', pup); pbtn.addEventListener('pointercancel', pup);
+  $('#closeParent').addEventListener('click', function () { pov.classList.remove('show'); });
+  function sndLabel() { $('#sndBtn').textContent = 'Sound: ' + (muted ? 'off' : 'on'); }
+  sndLabel();
+  $('#sndBtn').addEventListener('click', function () {
+    muted = !muted; try { localStorage.setItem('muted', muted ? '1' : '0'); } catch (e) {} sndLabel(); tone(440, 0.1);
+  });
+  $('#fsBtn').addEventListener('click', function () {
+    var d = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen(); else if (d.requestFullscreen) d.requestFullscreen().catch(function () {});
+    pov.classList.remove('show');
+  });
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredInstall = e; $('#install').style.display = 'block'; });
+  $('#install').addEventListener('click', function () { if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; $('#install').style.display = 'none'; } });
+  window.addEventListener('appinstalled', function () { $('#install').style.display = 'none'; });
+
+  /* ---------- keep a toddler inside the app ---------- */
+  document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+  document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); });
+  try { history.pushState({ a: 1 }, ''); window.addEventListener('popstate', function () { history.pushState({ a: 1 }, ''); }); } catch (e) {}
+
+  var lock = null;
+  function wake() {
+    if (!('wakeLock' in navigator) || lock) return;
+    navigator.wakeLock.request('screen').then(function (l) { lock = l; l.addEventListener('release', function () { lock = null; }); }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { wake(); fit(); } });
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', function () { setTimeout(fit, 200); });
+
+  fit(); syncUI();
+  if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
+})();
+</script>
+</body>
+</html>
