@@ -22,13 +22,14 @@
     -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
     font-family: system-ui, sans-serif;
   }
-  :root { --u: min(12vh, 10vw); --g: calc(var(--u) * .12); --cs: calc((100vh - var(--u) * 2.2) / 7); }
+  /* dead strip at the bottom so touches don't start in Android's gesture-nav swipe zone */
+  :root { --gesture-gutter: 36px; --u: min(12vh, 10vw); --g: calc(var(--u) * .12); --cs: calc((100vh - var(--u) * 2.2) / 7); }
   #app {
     position: fixed; inset: 0; display: grid;
     grid-template-columns: calc(var(--u) * 1.35) 1fr calc(var(--u) * 1.35);
     grid-template-rows: calc(var(--u) * .85) 1fr;
     gap: var(--g);
-    padding: max(var(--g), env(safe-area-inset-top)) max(var(--g), env(safe-area-inset-right)) max(var(--g), env(safe-area-inset-bottom)) max(var(--g), env(safe-area-inset-left));
+    padding: max(var(--g), env(safe-area-inset-top)) max(var(--g), env(safe-area-inset-right)) max(var(--gesture-gutter), env(safe-area-inset-bottom)) max(var(--g), env(safe-area-inset-left));
   }
   #top { grid-column: 1 / 4; display: flex; align-items: center; gap: var(--g); }
   #top .sp { flex: 1; }
