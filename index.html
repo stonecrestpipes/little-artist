@@ -181,7 +181,7 @@
     }
   }
   function drawStroke(c, s, from) {
-    if (s.tool === 'clear') { c.fillStyle = BG; c.fillRect(0, 0, W, H); return; }
+    if (s.tool === 'clear') { c.fillStyle = BG; c.fillRect(0, 0, 1e5, 1e5); return; }
     for (var i = from || 0; i < s.pts.length; i++) drawSeg(c, s, i);
   }
   function render() {
@@ -202,12 +202,18 @@
     var nd = Math.min(window.devicePixelRatio || 1, 2);
     var nw = Math.round(r.width * nd), nh = Math.round(r.height * nd);
     if (!nw || !nh || (nw === cv.width && nh === cv.height)) return;
-    var prev = null, pw = W, ph = H;
-    if (cv.width) { prev = document.createElement('canvas'); prev.width = cv.width; prev.height = cv.height; prev.getContext('2d').drawImage(cv, 0, 0); }
-    cv.width = nw; cv.height = nh; base.width = nw; base.height = nh; dpr = nd; W = r.width; H = r.height;
+    /* keep a store that only grows, so a transient shrink (Android nav bar peeking) never crops the drawing */
+    var old = null;
+    if (base.width) {
+      for (var i = 0; i < strokes.length; i++) drawStroke(bctx, strokes[i]);
+      old = document.createElement('canvas'); old.width = base.width; old.height = base.height; old.getContext('2d').drawImage(base, 0, 0);
+    }
+    var bw = Math.max(nw, base.width), bh = Math.max(nh, base.height);
+    cv.width = nw; cv.height = nh; base.width = bw; base.height = bh; dpr = nd; W = r.width; H = r.height;
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.fillStyle = BG; bctx.fillRect(0, 0, bw, bh);
+    if (old) bctx.drawImage(old, 0, 0);
     bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    bctx.fillStyle = BG; bctx.fillRect(0, 0, W, H);
-    if (prev) bctx.drawImage(prev, 0, 0, pw, ph);
     strokes = [];
     render();
   }
