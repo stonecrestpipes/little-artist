@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
 <meta name="theme-color" content="#000000" />
 <meta name="robots" content="noindex, nofollow" />
 <meta name="mobile-web-app-capable" content="yes" />
@@ -132,7 +133,7 @@
   var active = {};
   var color = COLORS[0], tool = 'pencil', sizeIdx = 1, erasing = false;
   var muted = false;
-  try { muted = localStorage.getItem('muted') === '1'; } catch (e) {}
+  try { muted = localStorage.getItem('la.muted') === '1'; } catch (e) {}
 
   /* ---------- sound (synthesized, no files) ---------- */
   var AC = null;
@@ -289,7 +290,7 @@
   function sndLabel() { $('#sndBtn').textContent = 'Sound: ' + (muted ? 'off' : 'on'); }
   sndLabel();
   $('#sndBtn').addEventListener('click', function () {
-    muted = !muted; try { localStorage.setItem('muted', muted ? '1' : '0'); } catch (e) {} sndLabel(); tone(440, 0.1);
+    muted = !muted; try { localStorage.setItem('la.muted', muted ? '1' : '0'); } catch (e) {} sndLabel(); tone(440, 0.1);
   });
   $('#fsBtn').addEventListener('click', function () {
     var d = document.documentElement;

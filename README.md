@@ -49,7 +49,7 @@ Gotchas hit while building this:
 ## Local testing
 
 ```bash
-python -m http.server 8137
+python -m http.server 8137 --bind 127.0.0.1
 ```
 
 Then open http://localhost:8137/ (service worker and install only fully work over HTTPS, so test those on the live link).
