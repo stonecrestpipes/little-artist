@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
-<meta name="theme-color" content="#000000" />
+<meta name="theme-color" content="#0B0F2A" />
 <meta name="robots" content="noindex, nofollow" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -16,12 +16,18 @@
 <title>Little Artist</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* Shakedown brand guide: flat colour, square corners, 2px strokes, near-black outlines, pixel font, no motion on press */
+  :root {
+    --void: #05070F; --navy: #0B0F2A; --band: #1B2352; --white: #DFE8FF; --tag: #8FA6CC; --dim: #5F7099;
+    --cyan: #4AD4FF; --warn: #FF4D6A; --ok: #5CFF9D; --gold: #FFD23D;
+    --fill: rgba(74,212,255,.12); --fill-on: rgba(74,212,255,.28); --stroke: rgba(74,212,255,.55);
+  }
   html, body {
-    width: 100%; height: 100%; background: #000; overflow: hidden;
+    width: 100%; height: 100%; background: var(--navy); overflow: hidden;
     touch-action: none; overscroll-behavior: none;
     -webkit-user-select: none; user-select: none;
     -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
-    font-family: system-ui, sans-serif;
+    font-family: Consolas, Menlo, monospace;
   }
   /* dead strip at the bottom so touches don't start in Android's gesture-nav swipe zone */
   :root { --gesture-gutter: 36px; --u: min(12vh, 10vw); --g: calc(var(--u) * .12); --cs: calc((100vh - var(--u) * 2.2) / 7); }
@@ -34,70 +40,78 @@
   }
   #top { grid-column: 1 / 4; display: flex; align-items: center; gap: var(--g); }
   #top .sp { flex: 1; }
-  .panel { background: #1c1c1c; border-radius: calc(var(--u) * .3); display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; padding: calc(var(--u) * .1); gap: calc(var(--u) * .1); min-height: 0; }
-  button { font: inherit; border: none; cursor: pointer; touch-action: manipulation; transition: transform .08s; }
-  button:active { transform: scale(.92); }
-  .btn { background: #2a2a2a; color: #eee; border-radius: calc(var(--u) * .25); display: flex; align-items: center; justify-content: center; border: 3px solid #444; }
-  .btn svg { width: calc(var(--u) * .45); height: calc(var(--u) * .45); flex: none; }
-  .btn span { font-size: calc(var(--u) * .16); color: #ccc; }
+  .panel { background: var(--band); box-shadow: 0 0 0 2px var(--void); display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; padding: calc(var(--u) * .1); gap: calc(var(--u) * .1); min-height: 0; }
+  button { font: inherit; border: none; cursor: pointer; touch-action: manipulation; }
+  .btn { background: var(--fill); color: var(--white); display: flex; align-items: center; justify-content: center; border: 2px solid var(--stroke); }
+  .btn:active { background: var(--fill-on); }
+  .pi { flex: none; display: block; image-rendering: pixelated; }
+  /* labels are drawn in the pixel font; the real text stays in the DOM for screen readers */
+  .btn span, #parentCard button {
+    color: transparent; text-indent: -9999px; overflow: hidden; white-space: nowrap; image-rendering: pixelated;
+    background: var(--pt, none) center / var(--ptw, 0) var(--pth, 0) no-repeat;
+  }
+  .btn span { display: block; width: var(--ptw, auto); height: var(--pth, auto); }
   .tool { flex-direction: column; gap: 2px; }
   .big { gap: calc(var(--u) * .1); }
   .big { width: calc(var(--u) * 1.6); height: calc(var(--u) * .85); }
   .tool { width: calc(var(--u) * 1.15); height: calc(var(--u) * .95); }
   .size { width: calc(var(--u) * 1.15); height: calc(var(--u) * .62); }
-  .btn.sel { border-color: #fff; background: #3d3d3d; box-shadow: 0 0 0 4px #fff; }
-  .size i { display: block; border-radius: 50%; background: #eee; }
-  .color { width: min(var(--cs), calc(var(--u) * 1.1)); height: min(var(--cs), calc(var(--u) * 1.1)); border-radius: 22%; border: 4px solid rgba(255,255,255,.5); flex: none; }
-  .color.sel { border-color: #fff; box-shadow: 0 0 0 3px #1c1c1c, 0 0 0 6px #fff; transform: scale(1.04); }
-  #cv { grid-column: 2; grid-row: 2; width: 100%; height: 100%; background: #fff; border-radius: calc(var(--u) * .3); display: block; touch-action: none; min-height: 0; min-width: 0; }
-  #parent { position: relative; width: calc(var(--u) * .6); height: calc(var(--u) * .6); border-radius: 50%; background: transparent; color: #555; display: flex; align-items: center; justify-content: center; }
-  #parent svg { width: 60%; height: 60%; }
-  #parent::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 5px solid #FF922B; transform: scale(0); opacity: 0; transition: none; }
+  .btn.sel { border-color: var(--cyan); background: var(--fill-on); box-shadow: inset 0 0 0 2px var(--cyan); }
+  .size i { display: block; background: var(--white); }
+  .color { width: min(var(--cs), calc(var(--u) * 1.1)); height: min(var(--cs), calc(var(--u) * 1.1)); border: 2px solid var(--dim); flex: none; }
+  .color.sel { box-shadow: 0 0 0 2px var(--band), 0 0 0 4px var(--cyan); }
+  #cv { grid-column: 2; grid-row: 2; width: 100%; height: 100%; background: #fff; box-shadow: 0 0 0 2px var(--void); display: block; touch-action: none; min-height: 0; min-width: 0; }
+  #parent { position: relative; width: calc(var(--u) * .6); height: calc(var(--u) * .6); background: var(--band); box-shadow: 0 0 0 2px var(--void); color: var(--dim); display: flex; align-items: center; justify-content: center; }
+  #parent::after { content: ""; position: absolute; inset: 0; border: 5px solid var(--cyan); transform: scale(0); opacity: 0; transition: none; }
   #parent.hold::after { opacity: 1; transform: scale(1); transition: transform 1.2s linear; }
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 5; }
+  .overlay { position: fixed; inset: 0; background: rgba(5,7,15,.75); display: none; align-items: center; justify-content: center; z-index: 5; }
   .overlay.show { display: flex; }
-  .card { background: #fff; border-radius: calc(var(--u) * .4); padding: calc(var(--u) * .4); display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .3); }
+  .card { background: var(--navy); border: 2px solid var(--stroke); box-shadow: 0 0 0 2px var(--void); padding: calc(var(--u) * .4); display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .3); }
   .card .row { display: flex; gap: calc(var(--u) * .4); }
-  .yn { width: calc(var(--u) * 1.5); height: calc(var(--u) * 1.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-  .yn svg { width: 60%; height: 60%; }
-  #parentCard { align-items: stretch; min-width: 320px; }
-  #parentCard button { font-size: 20px; padding: 16px 20px; border-radius: 14px; background: #F1EFE8; color: #222; text-align: left; }
-  #parentCard .hint { font-size: 14px; color: #666; }
+  .yn { width: calc(var(--u) * 1.5); height: calc(var(--u) * 1.5); border: 2px solid; display: flex; align-items: center; justify-content: center; }
+  #no { background: rgba(255,77,106,.12); border-color: rgba(255,77,106,.55); }
+  #yes { background: rgba(92,255,157,.12); border-color: rgba(92,255,157,.55); }
+  #no:active { background: rgba(255,77,106,.28); }
+  #yes:active { background: rgba(92,255,157,.28); }
+  #parentCard { align-items: stretch; min-width: 380px; }
+  #parentCard button { font-size: 21px; height: max(46px, calc(var(--u) * .5)); background-color: var(--fill); border: 2px solid var(--stroke); }
+  #parentCard button:active { background-color: var(--fill-on); }
+  #parentCard .hint { font: 14px/1.4 system-ui, sans-serif; color: var(--tag); }
   #install { display: none; }
-  #installTop { display: none; width: auto; padding: 0 calc(var(--u) * .3); background: #FFD43B; color: #111; border-color: #FFD43B; font-weight: 700; }
-  #installTop span { color: #111; font-size: calc(var(--u) * .24); }
+  #installTop { display: none; width: auto; padding: 0 calc(var(--u) * .3); background: var(--fill-on); border-color: var(--cyan); }
+  #installTop span { font-size: calc(var(--u) * .24); }
   #installTop.show { display: flex; }
   #trace { display: none; grid-column: 2; grid-row: 2; flex-direction: column; gap: var(--g); min-height: 0; min-width: 0; }
   .tracing #cv { display: none; }
   .tracing #trace { display: flex; }
   .tracing #eraser { visibility: hidden; }
   #tmain { flex: 1; display: flex; gap: var(--g); min-height: 0; }
-  #tmodel, #twrap { position: relative; flex: 1; min-width: 0; min-height: 0; border-radius: calc(var(--u) * .3); overflow: hidden; }
-  #tmodel { background: #FFF3BF; }
+  #tmodel, #twrap { position: relative; flex: 1; min-width: 0; min-height: 0; overflow: hidden; box-shadow: 0 0 0 2px var(--void); }
+  #tmodel { background: var(--band); }
   #twrap { background: #fff; }
   #trace.big #tmodel { display: none; }
   #tmodel canvas, #twrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #ti { touch-action: none; }
-  #tcheer { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: calc(var(--u) * 1.3); color: #FFB800; pointer-events: none; text-shadow: 0 0 0 #fff; }
+  #tcheer { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: calc(var(--u) * 1.3); color: var(--gold); pointer-events: none; text-shadow: 0 0 0 #fff; }
   #tcheer.show { display: flex; animation: pop .5s ease-out; }
   @keyframes pop { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   #tbar { display: flex; align-items: center; justify-content: space-between; gap: var(--g); height: calc(var(--u) * .85); }
   #tbar .grp { display: flex; gap: var(--g); }
   .tb { width: calc(var(--u) * 1.1); height: calc(var(--u) * .85); flex-direction: column; gap: 2px; }
-  .tb.tab span { font-size: calc(var(--u) * .3); color: #eee; }
+  .tb.tab span { font-size: calc(var(--u) * .3); }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="top">
-    <button class="btn big" id="eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3"/><path d="M18 13.3l-6.3 -6.3"/></svg><span>Eraser</span></button>
-    <button class="btn big" id="undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg><span>Undo</span></button>
-    <button class="btn big" id="traceBtn" aria-label="Trace letters and numbers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20l7 -16l7 16"/><path d="M8.5 14h7"/></svg><span>Trace</span></button>
+    <button class="btn big" id="eraser" aria-label="Eraser"><canvas class="pi" data-ico="eraser"></canvas><span>Eraser</span></button>
+    <button class="btn big" id="undo" aria-label="Undo"><canvas class="pi" data-ico="undo"></canvas><span>Undo</span></button>
+    <button class="btn big" id="traceBtn" aria-label="Trace letters and numbers"><canvas class="pi" data-ico="A" data-k=".25"></canvas><span>Trace</span></button>
     <div class="sp"></div>
     <button class="btn big" id="installTop" aria-label="Install app"><span>Install app</span></button>
-    <button id="parent" aria-label="Grown-ups: hold to open"><svg viewBox="0 0 64 64" fill="currentColor"><rect x="14" y="28" width="36" height="28" rx="6"/><path d="M22 28v-8a10 10 0 0 1 20 0v8" fill="none" stroke="currentColor" stroke-width="6"/></svg></button>
+    <button id="parent" aria-label="Grown-ups: hold to open"><canvas class="pi" data-ico="lock" data-k=".36" data-col="dim"></canvas></button>
     <div class="sp"></div>
-    <button class="btn big" id="clear" aria-label="Clear everything"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:#ff6b6b"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg><span>Clear</span></button>
+    <button class="btn big" id="clear" aria-label="Clear everything"><canvas class="pi" data-ico="trash" data-k=".45" data-col="warn"></canvas><span>Clear</span></button>
   </div>
 
   <div class="panel" id="colors"></div>
@@ -109,25 +123,25 @@
     </div>
     <div id="tbar">
       <div class="grp">
-        <button class="btn tb" id="tPrev" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+        <button class="btn tb" id="tPrev" aria-label="Previous"><canvas class="pi" data-ico="prev" data-k=".3"></canvas></button>
         <button class="btn tb tab" data-set="ABC" aria-label="Capital letters"><span>ABC</span></button>
         <button class="btn tb tab" data-set="123" aria-label="Numbers"><span>123</span></button>
-        <button class="btn tb tab" data-set="abc" aria-label="Small letters"><span>abc</span></button>
+        <button class="btn tb tab" data-set="abc" aria-label="Small letters"><span>Small</span></button>
       </div>
       <div class="grp">
-        <button class="btn tb" id="tSay" aria-label="Say it again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 8a5 5 0 0 1 0 8"/><path d="M17.7 5a9 9 0 0 1 0 14"/><path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"/></svg></button>
-        <button class="btn tb" id="tRedo" aria-label="Try again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg></button>
-        <button class="btn tb" id="tLay" aria-label="Switch layout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" rx="2"/><rect x="13" y="5" width="8" height="14" rx="2"/></svg></button>
+        <button class="btn tb" id="tSay" aria-label="Say it again"><canvas class="pi" data-ico="say"></canvas></button>
+        <button class="btn tb" id="tRedo" aria-label="Try again"><canvas class="pi" data-ico="redo"></canvas></button>
+        <button class="btn tb" id="tLay" aria-label="Switch layout"><canvas class="pi" data-ico="layout"></canvas></button>
       </div>
       <div class="grp">
-        <button class="btn tb" id="tNext" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+        <button class="btn tb" id="tNext" aria-label="Next"><canvas class="pi" data-ico="next" data-k=".3"></canvas></button>
       </div>
     </div>
   </div>
   <div class="panel" id="tools">
-    <button class="btn tool sel" data-tool="pencil" aria-label="Pencil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg><span>Pencil</span></button>
-    <button class="btn tool" data-tool="marker" aria-label="Marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M12.5 5.5l4 4"/><path d="M4.5 13.5l4 4"/><path d="M21 15v4h-8l4 -4z"/></svg><span>Marker</span></button>
-    <button class="btn tool" data-tool="sparkle" aria-label="Sparkle brush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z"/></svg><span>Sparkle</span></button>
+    <button class="btn tool sel" data-tool="pencil" aria-label="Pencil"><canvas class="pi" data-ico="pencil"></canvas><span>Pencil</span></button>
+    <button class="btn tool" data-tool="marker" aria-label="Marker"><canvas class="pi" data-ico="marker"></canvas><span>Marker</span></button>
+    <button class="btn tool" data-tool="sparkle" aria-label="Sparkle brush"><canvas class="pi" data-ico="sparkle"></canvas><span>Sparkle</span></button>
     <div id="sizes" style="display:contents">
       <button class="btn size" data-size="0" aria-label="Thin"><i style="width:12px;height:12px"></i></button>
       <button class="btn size sel" data-size="1" aria-label="Medium"><i style="width:22px;height:22px"></i></button>
@@ -138,10 +152,10 @@
 
 <div class="overlay" id="confirm">
   <div class="card">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="90" height="90" style="color:#E8312F"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg>
+    <canvas class="pi" data-ico="trash" data-k=".9" data-col="warn"></canvas>
     <div class="row">
-      <button class="yn" id="no" style="background:#FFC9C9" aria-label="No, keep drawing"><svg viewBox="0 0 64 64" fill="none" stroke="#C92A2A" stroke-width="9" stroke-linecap="round"><path d="M16 16l32 32M48 16L16 48"/></svg></button>
-      <button class="yn" id="yes" style="background:#B2F2BB" aria-label="Yes, clear"><svg viewBox="0 0 64 64" fill="none" stroke="#2B8A3E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 34l14 14 26-30"/></svg></button>
+      <button class="yn" id="no" aria-label="No, keep drawing"><canvas class="pi" data-ico="x" data-k=".5" data-col="warn"></canvas></button>
+      <button class="yn" id="yes" aria-label="Yes, clear"><canvas class="pi" data-ico="check" data-k=".5" data-col="ok"></canvas></button>
     </div>
   </div>
 </div>
@@ -152,7 +166,7 @@
     <button id="fsBtn">Go full screen</button>
     <button id="install">Install app</button>
     <div class="hint">Tip: for a fully locked screen, turn on Android's Screen pinning, then pin this app.</div>
-    <button id="closeParent" style="background:#222;color:#fff">Back to drawing</button>
+    <button id="closeParent">Back to drawing</button>
   </div>
 </div>
 
@@ -396,10 +410,10 @@
   }
   function drawGlyph(c, w, h, ch, mode) {
     var m = metrics(w, h, ch); setGlyph(c, w, h, m, ch);
-    if (mode === 'model') { c.fillStyle = '#F08C00'; c.fillText(ch, w / 2, m.base); }
+    if (mode === 'model') { c.fillStyle = '#DFE8FF'; c.fillText(ch, w / 2, m.base); }
     else if (mode === 'outline') {
-      c.fillStyle = '#F1F3F5'; c.fillText(ch, w / 2, m.base);
-      c.strokeStyle = '#868e96'; c.lineWidth = 4; c.setLineDash([1, 12]); c.strokeText(ch, w / 2, m.base); c.setLineDash([]);
+      c.fillStyle = '#E6EBFA'; c.fillText(ch, w / 2, m.base);
+      c.strokeStyle = '#8FA6CC'; c.lineWidth = 4; c.setLineDash([1, 12]); c.strokeText(ch, w / 2, m.base); c.setLineDash([]);
     } else if (mode === 'solid') { c.fillStyle = '#000'; c.fillText(ch, w / 2, m.base); }
     return m;
   }
@@ -526,6 +540,68 @@
 
   fit(); syncUI();
   if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
+})();
+</script>
+<script>
+/* Pixel styling: draws the guide's 5x7 font and icon sprites. Whole-number scales only. Display only, no behaviour. */
+(function () {
+  var COL = { white: '#DFE8FF', dim: '#5F7099', warn: '#FF4D6A', ok: '#5CFF9D', gold: '#FFD23D', blue: '#2F7FE0' };
+  var FONT = {};
+  ('A .###./#...#/#...#/#####/#...#/#...#/#...#\nB ####./#...#/#...#/####./#...#/#...#/####.\nC .####/#..../#..../#..../#..../#..../.####\nD ####./#...#/#...#/#...#/#...#/#...#/####.\nE #####/#..../#..../####./#..../#..../#####\nF #####/#..../#..../####./#..../#..../#....\nG .####/#..../#..../#.###/#...#/#...#/.###.\nH #...#/#...#/#...#/#####/#...#/#...#/#...#\nI .###./..#../..#../..#../..#../..#../.###.\nJ ..###/...#./...#./...#./...#./#..#./.##..\nK #...#/#..#./#.#../##.../#.#../#..#./#...#\nL #..../#..../#..../#..../#..../#..../#####\nM #...#/##.##/#.#.#/#.#.#/#...#/#...#/#...#\nN #...#/##..#/#.#.#/#..##/#...#/#...#/#...#\nO .###./#...#/#...#/#...#/#...#/#...#/.###.\nP ####./#...#/#...#/####./#..../#..../#....\nQ .###./#...#/#...#/#...#/#.#.#/#..#./.##.#\nR ####./#...#/#...#/####./#.#../#..#./#...#\nS .####/#..../#..../.###./....#/....#/####.\nT #####/..#../..#../..#../..#../..#../..#..\nU #...#/#...#/#...#/#...#/#...#/#...#/.###.\nV #...#/#...#/#...#/#...#/#...#/.#.#./..#..\nW #...#/#...#/#...#/#.#.#/#.#.#/##.##/#...#\nX #...#/#...#/.#.#./..#../.#.#./#...#/#...#\nY #...#/#...#/.#.#./..#../..#../..#../..#..\nZ #####/....#/...#./..#../.#.../#..../#####\n0 .###./#...#/#..##/#.#.#/##..#/#...#/.###.\n1 ..#../.##../..#../..#../..#../..#../.###.\n2 .###./#...#/....#/...#./..#../.#.../#####\n3 ####./....#/....#/.###./....#/....#/####.\n4 #...#/#...#/#...#/#####/....#/....#/....#\n5 #####/#..../####./....#/....#/#...#/.###.\n6 .###./#..../#..../####./#...#/#...#/.###.\n7 #####/....#/...#./..#../.#.../.#.../.#...\n8 .###./#...#/#...#/.###./#...#/#...#/.###.\n9 .###./#...#/#...#/.####/....#/....#/.###.\n: ...../..#../...../...../...../..#../.....\n- ...../...../...../#####/...../...../.....\n. ...../...../...../...../...../.##../.##..')
+    .split('\n').forEach(function (l) { FONT[l[0]] = l.slice(2).split('/'); });
+  function flip(r) { return r.map(function (x) { return x.split('').reverse().join(''); }); }
+  var IC = {
+    eraser: ['....bb#####', '...bb#####.', '..bb#####..', '.bb#####...', 'bb#####....', '...........', '###########'],
+    undo: ['..#........', '.##........', '##########.', '.##.......#', '..#.......#', '........##.', '..#######..'],
+    trash: ['...###...', '#########', '.#######.', '.#.#.#.#.', '.#.#.#.#.', '.#.#.#.#.', '.#.#.#.#.', '.#######.'],
+    pencil: ['........##.', '.......###.', '......###..', '.....###...', '....###....', '...###.....', '..###......', '.###.......', '.##b.......', '#bb........'],
+    marker: ['......####.', '.....#####.', '....#####..', '...#####...', '..#####....', '.#####.....', '#####......', 'bbbbbbbbb..'],
+    sparkle: ['....g....', '....g....', '...ggg...', 'ggggggggg', '...ggg...', '....g....', '....g....'],
+    lock: ['..#####..', '.#.....#.', '.#.....#.', '#########', '#########', '####.####', '####.####', '#########', '#########'],
+    say: ['....#......', '...##..#...', '####....#..', '####..#..#.', '####....#..', '...##..#...', '....#......'],
+    layout: ['#####.#####', '#...#.#...#', '#...#.#...#', '#...#.#...#', '#...#.#...#', '#...#.#...#', '#...#.#...#', '#...#.#...#', '#####.#####'],
+    prev: ['...##', '..##.', '.##..', '##...', '.##..', '..##.', '...##'],
+    x: ['##...##', '.##.##.', '..###..', '...#...', '..###..', '.##.##.', '##...##'],
+    check: ['........#', '.......##', '#.....##.', '##...##..', '.##.##...', '..###....', '...#.....'],
+    A: FONT.A
+  };
+  IC.redo = flip(IC.undo); IC.next = flip(IC.prev);
+
+  function unit() { return Math.min(0.12 * innerHeight, 0.10 * innerWidth); }
+
+  function icon(cv) {
+    var rows = IC[cv.dataset.ico]; if (!rows) return;
+    var w = rows[0].length, h = rows.length;
+    var main = COL[cv.dataset.col] || COL.white, map = { '#': main, b: COL.blue, g: COL.gold };
+    var s = Math.max(1, Math.floor(unit() * parseFloat(cv.dataset.k || '.45') / Math.max(w, h)));
+    cv.width = w; cv.height = h; cv.style.width = w * s + 'px'; cv.style.height = h * s + 'px';
+    var g = cv.getContext('2d'); g.clearRect(0, 0, w, h);
+    rows.forEach(function (r, y) { for (var x = 0; x < w; x++) if (r[x] !== '.') { g.fillStyle = map[r[x]]; g.fillRect(x, y, 1, 1); } });
+  }
+
+  var tc = document.createElement('canvas'), tg = tc.getContext('2d');
+  function label(el) {
+    var t = el.textContent.replace(/\s+/g, ' ').trim().toUpperCase();
+    var fs = parseFloat(getComputedStyle(el).fontSize) || 14, s = Math.max(1, Math.round(fs / 7));
+    var box = el.closest('button'), bw = box ? box.clientWidth : 0;
+    if (bw > 0 && !el.matches('#parentCard button')) while (s > 1 && t.length * 6 * s - s > bw * 0.9) s--;
+    var key = t + '|' + s; if (el._k === key) return; el._k = key;
+    var w = Math.max(1, t.length * 6 - 1);
+    tc.width = w; tc.height = 7; tg.clearRect(0, 0, w, 7); tg.fillStyle = COL.white;
+    for (var i = 0; i < t.length; i++) { var r = FONT[t[i]]; if (!r) continue; for (var y = 0; y < 7; y++) for (var x = 0; x < 5; x++) if (r[y][x] === '#') tg.fillRect(i * 6 + x, y, 1, 1); }
+    el.style.setProperty('--pt', 'url(' + tc.toDataURL() + ')');
+    el.style.setProperty('--ptw', w * s + 'px'); el.style.setProperty('--pth', 7 * s + 'px');
+  }
+  var LABELS = '.btn span, #parentCard button';
+  function all() {
+    document.querySelectorAll('canvas.pi').forEach(icon);
+    document.querySelectorAll(LABELS).forEach(function (e) { e._k = null; label(e); });
+  }
+  all();
+  window.addEventListener('resize', all);
+  new MutationObserver(function (ms) {
+    ms.forEach(function (m) { var e = m.target.nodeType === 3 ? m.target.parentElement : m.target; if (e && e.matches && e.matches(LABELS)) label(e); });
+  }).observe(document.body, { childList: true, characterData: true, subtree: true });
 })();
 </script>
 </body>
