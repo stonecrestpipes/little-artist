@@ -50,7 +50,7 @@
     color: transparent; text-indent: -9999px; overflow: hidden; white-space: nowrap; image-rendering: pixelated;
     background: var(--pt, none) center / var(--ptw, 0) var(--pth, 0) no-repeat;
   }
-  .btn span { display: block; width: var(--ptw, auto); height: var(--pth, auto); }
+  .btn span { display: block; font-size: calc(var(--u) * .16); width: var(--ptw, auto); height: var(--pth, auto); }
   .tool { flex-direction: column; gap: 2px; }
   .big { gap: calc(var(--u) * .1); }
   .big { width: calc(var(--u) * 1.6); height: calc(var(--u) * .85); }
@@ -104,14 +104,14 @@
 <body>
 <div id="app">
   <div id="top">
-    <button class="btn big" id="eraser" aria-label="Eraser"><canvas class="pi" data-ico="eraser"></canvas><span>Eraser</span></button>
-    <button class="btn big" id="undo" aria-label="Undo"><canvas class="pi" data-ico="undo"></canvas><span>Undo</span></button>
-    <button class="btn big" id="traceBtn" aria-label="Trace letters and numbers"><canvas class="pi" data-ico="A" data-k=".25"></canvas><span>Trace</span></button>
+    <button class="btn big" id="eraser" aria-label="Eraser"><canvas class="pi" data-ico="eraser" data-k=".4"></canvas><span>Eraser</span></button>
+    <button class="btn big" id="undo" aria-label="Undo"><canvas class="pi" data-ico="undo" data-k=".4"></canvas><span>Undo</span></button>
+    <button class="btn big" id="traceBtn" aria-label="Trace letters and numbers"><canvas class="pi" data-ico="A" data-k=".35"></canvas><span>Trace</span></button>
     <div class="sp"></div>
     <button class="btn big" id="installTop" aria-label="Install app"><span>Install app</span></button>
     <button id="parent" aria-label="Grown-ups: hold to open"><canvas class="pi" data-ico="lock" data-k=".36" data-col="dim"></canvas></button>
     <div class="sp"></div>
-    <button class="btn big" id="clear" aria-label="Clear everything"><canvas class="pi" data-ico="trash" data-k=".45" data-col="warn"></canvas><span>Clear</span></button>
+    <button class="btn big" id="clear" aria-label="Clear everything"><canvas class="pi" data-ico="trash" data-k=".4" data-col="warn"></canvas><span>Clear</span></button>
   </div>
 
   <div class="panel" id="colors"></div>
@@ -573,7 +573,7 @@
     var rows = IC[cv.dataset.ico]; if (!rows) return;
     var w = rows[0].length, h = rows.length;
     var main = COL[cv.dataset.col] || COL.white, map = { '#': main, b: COL.blue, g: COL.gold };
-    var s = Math.max(1, Math.floor(unit() * parseFloat(cv.dataset.k || '.45') / Math.max(w, h)));
+    var s = Math.max(1, Math.round(unit() * parseFloat(cv.dataset.k || '.45') / Math.max(w, h)));
     cv.width = w; cv.height = h; cv.style.width = w * s + 'px'; cv.style.height = h * s + 'px';
     var g = cv.getContext('2d'); g.clearRect(0, 0, w, h);
     rows.forEach(function (r, y) { for (var x = 0; x < w; x++) if (r[x] !== '.') { g.fillStyle = map[r[x]]; g.fillRect(x, y, 1, 1); } });
@@ -595,6 +595,10 @@
   var LABELS = '.btn span, #parentCard button';
   function all() {
     document.querySelectorAll('canvas.pi').forEach(icon);
+    document.querySelectorAll('.size i').forEach(function (d, i) {
+      var p = Math.max(2, 2 * Math.round(unit() * [0.14, 0.26, 0.4][i] / 2));
+      d.style.width = d.style.height = p + 'px';
+    });
     document.querySelectorAll(LABELS).forEach(function (e) { e._k = null; label(e); });
   }
   all();
