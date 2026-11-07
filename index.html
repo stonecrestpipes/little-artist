@@ -584,6 +584,12 @@
     var t = el.textContent.replace(/\s+/g, ' ').trim().toUpperCase();
     var fs = parseFloat(getComputedStyle(el).fontSize) || 14, s = Math.max(1, Math.round(fs / 7));
     var box = el.closest('button'), bw = box ? box.clientWidth : 0;
+    if (box && getComputedStyle(box).flexDirection === 'row') {
+      /* label sits beside an icon: leave room for it, the gap and the 2px borders */
+      var kids = box.children, gap = parseFloat(getComputedStyle(box).columnGap) || 0;
+      for (var j = 0; j < kids.length; j++) if (kids[j] !== el) bw -= kids[j].offsetWidth + gap;
+      bw -= 4;
+    }
     if (bw > 0 && !el.matches('#parentCard button')) while (s > 1 && t.length * 6 * s - s > bw * 0.9) s--;
     var key = t + '|' + s; if (el._k === key) return; el._k = key;
     var w = Math.max(1, t.length * 6 - 1);
