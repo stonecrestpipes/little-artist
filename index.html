@@ -260,8 +260,10 @@
     if (!nw || !nh || (nw === cv.width && nh === cv.height)) return;
     /* keep a store that only grows, so a transient shrink (Android nav bar peeking) never crops the drawing */
     var old = null;
+    /* same pixel density: strokes are vectors in CSS px, so keep them (and Undo) across a resize/rotate; only bake if density changed */
+    var keep = base.width && dpr === nd;
     if (base.width) {
-      for (var i = 0; i < strokes.length; i++) drawStroke(bctx, strokes[i]);
+      if (!keep) for (var i = 0; i < strokes.length; i++) drawStroke(bctx, strokes[i]);
       old = document.createElement('canvas'); old.width = base.width; old.height = base.height; old.getContext('2d').drawImage(base, 0, 0);
     }
     var bw = Math.max(nw, base.width), bh = Math.max(nh, base.height);
@@ -270,7 +272,7 @@
     bctx.fillStyle = BG; bctx.fillRect(0, 0, bw, bh);
     if (old) bctx.drawImage(old, 0, 0);
     bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    strokes = [];
+    if (!keep) strokes = [];
     render();
   }
 
