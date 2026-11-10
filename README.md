@@ -27,11 +27,13 @@ Deferred to a later version: paint can (fill), stamps, trace shapes/animals.
 | `sw.js` | Service worker: network-first launch (3 s timeout), cache-first for everything else |
 | `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | App icons (drawn with a throwaway PowerShell script, not kept in the repo) |
 | `.nojekyll` | Tells GitHub Pages to skip Jekyll |
-| `.github/workflows/pages.yml` | Deploys to Pages on every push to `main` |
+| `.github/workflows/pages.yml` | Runs the checks, then deploys to Pages on every push to `main` |
+| `tests/browser.test.cjs` | Optional browser regression tests (see Checks and tests) |
+| `scripts/check.mjs` | Pre-deploy checks, no dependencies: scripts parse, manifest and icons valid, `CACHE` bumped when app files change |
 
 ## Install on the tablet (the part that took effort)
 
-Open the live link in a normal Chrome tab, wait about 10 seconds, and tap the yellow **Install app** button in the top bar. Do not use Chrome's menu.
+Open the live link in a normal Chrome tab, wait about 10 seconds, and tap the cyan **Install app** button in the top bar. Do not use Chrome's menu.
 
 Why: Chrome Android's menu "Install app" treats a site as already installed when ANY installed app shares its origin. Every app on `stonecrestpipes.github.io` (Shakedown, Steel Squall, Little Engineer, ...) shares one origin, so once a sibling is installed the menu says "already installed". The page's own `beforeinstallprompt` prompt checks the start URL instead, so it still works. The button calls `prompt()` on the finger lifting (pointerup), because Chrome only counts the lift as a user gesture on touch. This is copied from Steel Squall (`src/game/install.ts` in `steelsquall-source`).
 
@@ -39,7 +41,7 @@ The button only shows when Chrome offers the install and the app isn't already r
 
 ## Deploy and update
 
-1. Edit files, and bump `CACHE` in `sw.js` (`little-artist-vN`) so installed copies update.
+1. Edit files, and bump `CACHE` in `sw.js` (`little-artist-vN`) so installed copies update. `node scripts/check.mjs` (run before pushing; CI runs it too) fails if you forget.
 2. `git push` to `main`. The Actions workflow deploys.
 3. Open the app once online, then close it fully and reopen. The first launch fetches the update and the next one uses it.
 
@@ -55,6 +57,20 @@ python -m http.server 8137 --bind 127.0.0.1
 ```
 
 Then open http://localhost:8137/ (service worker and install only fully work over HTTPS, so test those on the live link).
+
+## Checks and tests
+
+```bash
+node scripts/check.mjs
+```
+
+Fast static checks, no install. CI runs them before every deploy.
+
+```bash
+npm i --no-save playwright-core && node tests/browser.test.cjs
+```
+
+Browser regression tests (Trace layout, canvas refit, label fit, Undo) using your installed Chrome. Set `CHROME_PATH` if Chrome is somewhere unusual. Not run in CI.
 
 ## Tuning notes
 

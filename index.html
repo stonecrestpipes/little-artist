@@ -52,8 +52,7 @@
   }
   .btn span { display: block; font-size: calc(var(--u) * .16); width: var(--ptw, auto); height: var(--pth, auto); }
   .tool { flex-direction: column; gap: 2px; }
-  .big { gap: calc(var(--u) * .1); }
-  .big { width: calc(var(--u) * 1.6); height: calc(var(--u) * .85); }
+  .big { gap: calc(var(--u) * .1); width: calc(var(--u) * 1.6); height: calc(var(--u) * .85); }
   .tool { width: calc(var(--u) * 1.15); height: calc(var(--u) * .95); }
   .size { width: calc(var(--u) * 1.15); height: calc(var(--u) * .62); }
   .btn.sel { border-color: var(--cyan); background: var(--fill-on); box-shadow: inset 0 0 0 2px var(--cyan); }
@@ -89,10 +88,10 @@
   #tmodel, #twrap { position: relative; flex: 1; min-width: 0; min-height: 0; overflow: hidden; box-shadow: 0 0 0 2px var(--void); }
   #tmodel { background: var(--band); }
   #twrap { background: #fff; }
-  #trace.big #tmodel { display: none; }
+  #trace.one #tmodel { display: none; }
   #tmodel canvas, #twrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #ti { touch-action: none; }
-  #tcheer { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: calc(var(--u) * 1.3); color: var(--gold); pointer-events: none; text-shadow: 0 0 0 #fff; }
+  #tcheer { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: calc(var(--u) * 1.3); color: var(--gold); pointer-events: none; }
   #tcheer.show { display: flex; animation: pop .5s ease-out; }
   @keyframes pop { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   #tbar { display: flex; align-items: center; justify-content: space-between; gap: var(--g); height: calc(var(--u) * .85); }
@@ -183,7 +182,7 @@
 
   var cv = $('#cv'), ctx = cv.getContext('2d');
   var base = document.createElement('canvas'), bctx = base.getContext('2d');
-  var W = 0, H = 0, dpr = 1;
+  var dpr = 1;
   var strokes = [];
   var active = {};
   var color = COLORS[0], tool = 'pencil', sizeIdx = 1, erasing = false;
@@ -267,7 +266,7 @@
       old = document.createElement('canvas'); old.width = base.width; old.height = base.height; old.getContext('2d').drawImage(base, 0, 0);
     }
     var bw = Math.max(nw, base.width), bh = Math.max(nh, base.height);
-    cv.width = nw; cv.height = nh; base.width = bw; base.height = bh; dpr = nd; W = r.width; H = r.height;
+    cv.width = nw; cv.height = nh; base.width = bw; base.height = bh; dpr = nd;
     bctx.setTransform(1, 0, 0, 1, 0, 0);
     bctx.fillStyle = BG; bctx.fillRect(0, 0, bw, bh);
     if (old) bctx.drawImage(old, 0, 0);
@@ -387,7 +386,7 @@
   var tapp = $('#app'), trace = $('#trace'), tmodel = $('#tmodel'), twrap = $('#twrap'), tmc = $('#tmc'), tg = $('#tg'), ti = $('#ti'), tcheer = $('#tcheer');
   var tgx = tg.getContext('2d'), tix = ti.getContext('2d'), tmx = tmc.getContext('2d');
   var scratch = document.createElement('canvas'), sx = scratch.getContext('2d', { willReadFrequently: true });
-  var tOn = false, tset = 'ABC', tidx = 0, tlayout = 'side', tdone = false, tstrokes = [], tact = {}, tw = 0, th = 0, tadv = null;
+  var tOn = false, tset = 'ABC', tidx = 0, tlayout = 'side', tdone = false, tstrokes = [], tact = {}, tw = 0, th = 0, tadv = null, tsnd = [];
   try { if (localStorage.getItem('la.tlayout') === 'big') tlayout = 'big'; } catch (e) {}
 
   function tch() { return SETS[tset].charAt(tidx); }
@@ -400,18 +399,18 @@
   function metrics(w, h, c) {
     sx.font = FONT;
     var a = sx.measureText('H').actualBoundingBoxAscent, d = sx.measureText('g').actualBoundingBoxDescent;
-    var s = 0.82 * h / (a + d) , size = 100 * s;
+    var s = 0.82 * h / (a + d), size = 100 * s;
     sx.font = '800 ' + size + 'px ' + FAMILY;
     var wd = sx.measureText(c).width;
     if (wd > 0.9 * w) { size *= 0.9 * w / wd; s = size / 100; }
     return { size: size, cap: a * s, base: (h + a * s - d * s) / 2 };
   }
-  function setGlyph(c, w, h, m, ch) {
+  function setGlyph(c, m) {
     c.font = '800 ' + m.size + 'px ' + FAMILY;
     c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.lineJoin = 'round'; c.lineCap = 'round';
   }
   function drawGlyph(c, w, h, ch, mode) {
-    var m = metrics(w, h, ch); setGlyph(c, w, h, m, ch);
+    var m = metrics(w, h, ch); setGlyph(c, m);
     if (mode === 'model') { c.fillStyle = '#DFE8FF'; c.fillText(ch, w / 2, m.base); }
     else if (mode === 'outline') {
       c.fillStyle = '#E6EBFA'; c.fillText(ch, w / 2, m.base);
@@ -436,7 +435,7 @@
   }
   function tlay() {
     if (!tOn) return;
-    trace.classList.toggle('big', tlayout === 'big');
+    trace.classList.toggle('one', tlayout === 'big');
     var ch = tch(), a = sizeTo(tg, twrap); tw = a[0]; th = a[1];
     sizeTo(ti, twrap);
     if (!tw || !th) return;
@@ -448,8 +447,9 @@
     redrawInk();
     document.querySelectorAll('[data-set]').forEach(function (t) { t.classList.toggle('sel', t.dataset.set === tset); });
   }
+  function tClear() { clearTimeout(tadv); tsnd.forEach(clearTimeout); tsnd = []; }
   function tReset() {
-    clearTimeout(tadv); tstrokes = []; tact = {}; tdone = false; tcheer.classList.remove('show'); redrawInk();
+    tClear(); tstrokes = []; tact = {}; tdone = false; tcheer.classList.remove('show'); redrawInk();
   }
   function tgo(delta) {
     var n = SETS[tset].length; tidx = (tidx + delta + n) % n;
@@ -474,8 +474,8 @@
   }
   function cheer() {
     tdone = true; tcheer.classList.remove('show'); void tcheer.offsetWidth; tcheer.classList.add('show');
-    buzz(); [523, 659, 784, 1047].forEach(function (f, i) { setTimeout(function () { tone(f, 0.25, 'triangle', 0.2); }, i * 120); });
-    setTimeout(function () { speak(nameOf(tch())); }, 500);
+    buzz(); [523, 659, 784, 1047].forEach(function (f, i) { tsnd.push(setTimeout(function () { tone(f, 0.25, 'triangle', 0.2); }, i * 120)); });
+    tsnd.push(setTimeout(function () { speak(nameOf(tch())); }, 500));
     tadv = setTimeout(function () { tgo(1); }, 3200);
   }
   function tpt(e) { var r = ti.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; }
@@ -508,7 +508,7 @@
     tOn = on; tapp.classList.toggle('tracing', on); $('#traceBtn span').textContent = on ? 'Draw' : 'Trace';
     $('#traceBtn').classList.toggle('sel', on);
     if (on) { erasing = false; syncUI(); tReset(); tlay(); speak(nameOf(tch())); }
-    else { clearTimeout(tadv); try { speechSynthesis.cancel(); } catch (e) {} }
+    else { tClear(); try { speechSynthesis.cancel(); } catch (e) {} fit(); /* the canvas was hidden, so it missed any resize */ }
   }
   $('#traceBtn').addEventListener('click', function () { buzz(); traceMode(!tOn); });
   $('#tPrev').addEventListener('click', function () { buzz(); tgo(-1); });
@@ -611,6 +611,8 @@
   }
   all();
   window.addEventListener('resize', all);
+  /* Trace toolbar labels are measured while hidden; re-measure when the mode changes */
+  new MutationObserver(all).observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
   new MutationObserver(function (ms) {
     ms.forEach(function (m) { var e = m.target.nodeType === 3 ? m.target.parentElement : m.target; if (e && e.matches && e.matches(LABELS)) label(e); });
   }).observe(document.body, { childList: true, characterData: true, subtree: true });
